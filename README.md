@@ -5,6 +5,15 @@ Low level clojure(script) encoding and decoding library for [google's protobuf b
 
 It can also be used as a general purpose codec of protobuf binary format for any custom scheme of your design.
 
+## Usage
+Add the following to deps.edn (or its equivalent for lein).
+```edn
+{:deps
+ s-expresso/clojobuf-codec {:git/url "https://github.com/s-expresso/clojobuf-codec.git"
+                            :git/sha "6603474fdac773e8a74cd5fd937d0dea5cb73bff"
+                            :git/tag "v0.1.0"}}
+```
+
 ## Codec for protobuf 
 Example usage:
 
