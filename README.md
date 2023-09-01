@@ -1,11 +1,38 @@
 clojobuf-codec
 ==============
 
-clojobuf-codec is a low level Clojure(Script) encoding and decoding library for [google's protobuf binary format](https://protobuf.dev/programming-guides/encoding/). It can also be used as a general purpose codec of protobuf binary format for any custom scheme that you designed, where
-`primitive types` = 'double' | 'float' | 'int32' | 'int64' | 'uint32' | 'uint64' | 'sint32' | 'sint64' | 'fixed32' | 'fixed64' | 'sfixed32' | 'sfixed64' | 'bool' | 'string' | 'bytes';
+Low level clojure(script) encoding and decoding library for [google's protobuf binary format](https://protobuf.dev/programming-guides/encoding/).
 
-## To use clojobuf-codec for protobuf 
-Protobuf messages uses [Tag-Length-Value](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value) scheme to encode each field.
+It can also be used as a general purpose codec of protobuf binary format for any custom scheme of your design.
+
+## Codec for protobuf 
+Example usage:
+
+```clojure
+(ns my-ns.main
+  (:require [clojobuf-codec.io.reader :refer [make-reader]]
+            [clojobuf-codec.io.writer :refer [make-writer ->bytes]]
+            [clojobuf-codec.decode :refer [read-pri]]
+            [clojobuf-codec.encode :refer [write-pri]]))
+
+(def writer (make-writer))
+
+(write-pri writer 1 :uint32 23) ; field num 1
+(write-pri writer 2 :double 123.455) ; field num 2
+(write-pri writer 3 :string "the quick brown fox") ; field num 3
+
+(def out (->bytes writer))
+
+(def reader (make-reader out))
+
+(read-pri reader :uint32) ; returns [1 23]
+(read-pri reader :double) ; returns [2 123.456]
+(read-pri reader :string) ; returns [3 "the quick brown fox"]
+```
+
+Protobuf messages uses [google's protobuf binary format](https://protobuf.dev/programming-guides/encoding/) that encodes each field as [Tag-Length-Value](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value).
+
+### Functions to encode protobuf field
 
 For encoding, use functions in `clojobuf-codec.encode`:
 ```clojure
@@ -89,10 +116,12 @@ For encoding, use functions in `clojobuf-codec.encode`:
 
 ```
 
+### Functions to decode protobuf field
+
 For decoding, use functions in `clojobuf-codec.decode`:
 ```clojure
 (ns clojobuf-codec.decode
-  "Decoding a protobuf encoded binary is a 2 steps process performed repeatedly:
+  "Decoding a protobuf encoded message is a 2 steps process performed repeatedly:
     (1) call `(read-tag rr)` to get `field-id` and `wire-type`
     (2) look up `field-id` in your protobuf schema to determine `field-type`
         (A) `field-type` == primitive
@@ -102,7 +131,7 @@ For decoding, use functions in `clojobuf-codec.decode`:
             (a) value-type is msg         => `(read-kv-msg  rr key-type)`
             (b) value-type is enum        => `(read-kv-enum rr key-type)`
             (c) value-type is primitive   => `(read-kv-pri  rr key-type)`
-        (C) `field-type` == message     => `(read-len-coded-bytes rr)`
+        (C) `field-type` == message       => `(read-len-coded-bytes rr)`
   where `rr` is `clojobuf-codec.io.reader.ByteReader` reading the binary.
 
   If look up of `field-id` fails, then sender is using a schema with additional
@@ -157,65 +186,77 @@ For decoding, use functions in `clojobuf-codec.decode`:
   [reader wire-type] ...)
 ```
 
-Example:
+ While it is possible to use the lower level functions in `clojobuf-codec.serialize` and `clojobuf-codec.deserialize` (see below) for protobuf, it is unnecessary and not recommended.
+
+## Codec for custom schema (i.e. not protobuf)
+
+This is useful if you have own data schema and need a library to help you serialize and deserialize it using protobuf binary format. Protobuf binary format is a good choice because it is platform agnostic and is well supported on many programming languages. Serialization/deserialization libraries are readily available shall cross-language interop is needed. You can of course also transfer binary data between your clojure backend and clojurescript frontend, for say performance reason if the data set is huge and mostly number.
+
+Example usage:
 ```clojure
 (ns my-ns.main
   (:require [clojobuf-codec.io.reader :refer [make-reader]]
             [clojobuf-codec.io.writer :refer [make-writer ->bytes]]
-            [clojobuf-codec.decode :refer [read-pri]]
-            [clojobuf-codec.encode :refer [write-pri]]))
+            [clojobuf-codec.serialize :refer [write-int32 write-double write-text]]
+            [clojobuf-codec.deserialize :refer [read-int32 read-double read-text]]))
 
 (def writer (make-writer))
 
-(write-pri writer 1 :uint32 23) ; field num 1
-(write-pri writer 2 :double 123.455) ; field num 2
-(write-pri writer 3 :string "the quick brown fox") ; field num 3
+(write-int32 writer 23)
+(write-double writer 123.456)
+(write-text writer "the quick brown fox")
 
 (def out (->bytes writer))
 
 (def reader (make-reader out))
 
-(read-pri reader :uint32) ; returns [1 23]
-(read-pri reader :double) ; returns [2 123.456]
-(read-pri reader :string) ; returns [3 "the quick brown fox"]
+(println (read-int32 reader)) ; 23
+(println (read-double reader)) ; 123.456
+(println (read-text reader)) ; the quick brown fox"
 ```
- While it is possible to use the lower level functions in `clojobuf-codec.serialize` and `clojobuf-codec.deserialize` (see below) for protobuf, it is unnecessary and not recommended.
 
-## To use clojobuf-codec for encoding/decoding of other custom scheme
 You have the following choices of binary formats for different data types.
+
 Integer type:
-* varint:        a variable length integer format that is space optimized for small positive numbers
-* zigzag varint: similar to varint, but optimized for small positive and negative numbers
-* fixed32/64:    self explanatory
+* *varint*: a variable length integer format that is space optimized for small positive numbers
+* *zigzag varint*: similar to varint, but optimized for small positive and negative numbers
+* *fixed32/64*: self explanatory
+
 Decimal type:
-* double: 64bit decimal representation
-* float:  32bit decimal representation
+* *double*: 64bit decimal representation
+* *float*: 32bit decimal representation
+
 String type:
-* utf-8: auto converted into utf-8 and prepended with length
+* *utf-8*: auto converted into utf-8 and prepended with length
+
+### Functions to serialize data
+
 For encoding, use functions in `clojobuf-codec.serialize`
 ```clojure
-(defn write-int32    [writer data] ...) ; varint
-(defn write-int64    [writer data] ...) ; varint
+(defn write-int32    [writer data] ...) ; write varint
+(defn write-int64    [writer data] ...) ; write varint
 
-(defn write-uint32   [writer data] ...) ; varint
-(defn write-uint64   [writer data] ...) ; varint
+(defn write-uint32   [writer data] ...) ; write varint
+(defn write-uint64   [writer data] ...) ; write varint
 
-(defn write-sint32   [writer data] ...) ; zigzag varint
-(defn write-sint64   [writer data] ...) ; zigzag varint
+(defn write-sint32   [writer data] ...) ; write zigzag varint
+(defn write-sint64   [writer data] ...) ; write zigzag varint
 
-(defn write-fixed32  [writer data] ...) ; 32 bits
-(defn write-fixed64  [writer data] ...) ; 64 bits
+(defn write-fixed32  [writer data] ...) ; write 32 bits
+(defn write-fixed64  [writer data] ...) ; write 64 bits
 
-(defn write-double   [writer data] ...) ; 64 bits
-(defn write-float    [writer data] ...) ; 32 bits
+(defn write-double   [writer data] ...) ; write 64 bits
+(defn write-float    [writer data] ...) ; write 32 bits
 
-(defn write-bool     [writer data] ...) ; varint
-(defn write-enum     [writer data] ...) ; varint
+(defn write-bool     [writer data] ...) ; write varint
+(defn write-enum     [writer data] ...) ; write varint
 
 (defn write-bytes    [writer data] ...) ; write binary data
-(defn write-text     [writer data] ...) ; write data as utf-8 string, prepended with length of utf-8 string
+(defn write-text     [writer data] ...) ; write data as utf-8 string, prepended with length info encoded as varint
 ```
 where `varint` and `zigzag varint` are [google's protobuf binary format](https://protobuf.dev/programming-guides/encoding/) way of using less bytes for small value.
+
+### Functions to deserialize data
 
 For decoding, use functions in `clojobuf-codec.deserialize`
 ```clojure
@@ -239,27 +280,4 @@ For decoding, use functions in `clojobuf-codec.deserialize`
 
 (defn read-bytes    [reader] ...)
 (defn read-text     [reader] ...)
-```
-
-Example
-```clojure
-(ns my-ns.main
-  (:require [clojobuf-codec.io.reader :refer [make-reader]]
-            [clojobuf-codec.io.writer :refer [make-writer ->bytes]]
-            [clojobuf-codec.serialize :refer [write-int32 write-double write-text]]
-            [clojobuf-codec.deserialize :refer [read-int32 read-double read-text]]))
-
-(def writer (make-writer))
-
-(write-int32 writer 23)
-(write-double writer 123.456)
-(write-text writer "the quick brown fox")
-
-(def out (->bytes writer))
-
-(def reader (make-reader out))
-
-(println (read-int32 reader)) ; 23
-(println (read-double reader)) ; 123.456
-(println (read-text reader)) ; the quick brown fox"
 ```
