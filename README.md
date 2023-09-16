@@ -70,7 +70,7 @@ For encoding, use functions in `clojobuf-codec.encode`:
   "Write a primitive field where
     writer     = clojobuf-codec.io.writer.ByteWriter (defprotocol)
     field-num  = field number
-    field-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool |
+    field-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool | :enum
                  :fixed32 | :sfixed32 | :float |
                  :fixed64 | :sfixed64 | :double |
                  :string | :bytes
@@ -83,34 +83,6 @@ For encoding, use functions in `clojobuf-codec.encode`:
     field-num = field number
     binary    = binary data to be copied by writer"
   [writer field-num binary] ...)
-
-(defn write-kv-pri
-  "Write key-value where value is a primitive type
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    key-type  = key type
-    k         = key value
-    val-type  = value type
-    v         = value"
-  [writer field-num key-type k val-type v] ...)
-
-(defn write-kv-enum
-  "Write key-value where value is enum
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    key-type  = key type
-    k         = key value
-    int-val   = integer value (of enum field)"
-  [writer field-num key-type k int-val] ...)
-
-(defn write-kv-msg
-  "Write key-value where value is binary representation of protobuf message
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    key-type  = key type
-    k         = key value
-    binary    = binary representation of protobuf message"
-  [writer field-num key-type k binary] ...)
 
 (defn write-packed
   "Write a sequence as packed
@@ -136,12 +108,12 @@ For decoding, use functions in `clojobuf-codec.decode`:
         (A) `field-type` == primitive
             (a) not :bytes && wire-type 2 => `(read-packed rr field-type)`
             (b) all other cases           => `(read-pri    rr field-type)`
-        (B) `field-type` == map<key-type, value-type>
-            (a) value-type is msg         => `(read-kv-msg  rr key-type)`
-            (b) value-type is enum        => `(read-kv-enum rr key-type)`
-            (c) value-type is primitive   => `(read-kv-pri  rr key-type)`
-        (C) `field-type` == message       => `(read-len-coded-bytes rr)`
+        (B) `field-type` == message       => `(read-len-coded-bytes rr)`
+        (C) `field-type` == map           => decode it like message type
   where `rr` is `clojobuf-codec.io.reader.ByteReader` reading the binary.
+
+  For (C), you decode it like a message because a protobuf map is encoded as a 
+  message using field-id 1 to represent key and field-id 2 to represent value.
 
   If look up of `field-id` fails, then sender is using a schema with additional
   fields. Use `read-raw-wire` to extract the value generically and continue.
@@ -164,18 +136,6 @@ For decoding, use functions in `clojobuf-codec.decode`:
                 :fixed64 | :sfixed64 | :double |
                 :string | :bytes"
   [reader field-type] ...)
-
-(defn read-kv-pri
-  "Read and return [key value] where value is a primitive type."
-  [reader key-type val-type] ...)
-
-(defn read-kv-enum
-  "Read and return [key value] where value is integer representation of enum."
-  [reader key-type] ...)
-
-(defn read-kv-msg
-  "Read and return [key value] where value is binary representation of protobuf message."
-  [reader key-type] ...)
 
 (defn read-packed
   "Read length encoded packed data return it as a vector.

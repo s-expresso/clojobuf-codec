@@ -5,7 +5,7 @@
      (2) Len is varint encoded containing number of bytes that Val occupy; only
          present of wire-type 2
      (3) Val is varint encoded for wire-type 0, or a fixed length for wire-type
-         1 and 5, or a continuous length of bytes for wire-type 2
+         1 and 5, or N bytes (where N = Len) for wire-type 2
      
      Wire-Type
      0	VARINT  int32, int64, uint32, uint64, sint32, sint64, bool, enum
@@ -43,7 +43,7 @@
             [clojobuf-codec.deserialize :as des]
             [clojobuf-codec.util :refer [raise]]))
 
-(defn- read-len-coded-bytes
+(defn read-len-coded-bytes
   "Read the next value as varint N, and return the next N bytes as binary."
   [reader] (->> reader (des/read-int32) (read-bytearray reader)))
 
@@ -78,45 +78,11 @@
     :float    (des/read-float reader)
     (raise (str "Unexpected read-pri type:" field-type))))
 
-(defn read-kv-pri
-  "Read and return [key value] where value is a primitive type."
-  [reader key-type val-type]
-  (let [bin (read-len-coded-bytes reader)
-        bin-reader (make-reader bin)
-        _ (read-tag bin-reader)
-        k (read-pri bin-reader key-type)
-        _ (read-tag bin-reader)
-        v (read-pri bin-reader val-type)]
-    [k v]))
-
-(defn read-kv-enum
-  "Read and return [key value] where value is integer representation of enum."
-  [reader key-type]
-  (let [bin (read-len-coded-bytes reader)
-        bin-reader (make-reader bin)
-        _ (read-tag bin-reader)
-        k (read-pri bin-reader key-type)
-        _ (read-tag bin-reader)
-        v (read-pri bin-reader :enum)]
-    [k v]))
-
-(defn read-kv-msg
-  "Read and return [key value] where value is binary representation of protobuf message."
-  [reader key-type]
-  (let [bin (read-len-coded-bytes reader)
-        bin-reader (make-reader bin)
-        _ (read-tag bin-reader)
-        k (read-pri bin-reader key-type)
-        _ (read-tag bin-reader)
-        v (read-len-coded-bytes bin-reader)]
-    [k v]))
-
 (defn read-packed
   "Read length encoded packed data return it as a vector.
-     packed-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool |
+     packed-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool | :enum
                    :fixed32 | :sfixed32 | float |
-                   :fixed64 | :sfixed64 | double |
-                   :string"
+                   :fixed64 | :sfixed64 | double"
   [reader packed-type]
   (let [bin (read-len-coded-bytes reader)
         bin-reader (make-reader bin)]
