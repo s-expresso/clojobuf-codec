@@ -68,37 +68,39 @@
 (defmethod serdes :text [opts]          (roundtrip ser/write-text des/read-text (:data opts)))
 (defmethod serdes :tag [opts]           (roundtrip ser/write-tag des/read-tag (:field opts) (:wire-type opts)))
 
-(defn test-serdes-u32 [type]
-  (is (= 0 (serdes {:tag type :data 0})))
-  (is (= 123 (serdes {:tag type :data 123})))
-  (is (= 12345 (serdes {:tag type :data 12345})))
-  (is (= uint32-max-value (serdes {:tag type :data uint32-max-value}))))
+(defn test-serdes-u32 [typ]
+  (is (= 0 (serdes {:tag typ :data 0})))
+  (is (= 123 (serdes {:tag typ :data 123})))
+  (is (= 12345 (serdes {:tag typ :data 12345})))
+  (is (= uint32-max-value (serdes {:tag typ :data uint32-max-value}))))
 
-(defn test-serdes-32 [type]
-  (is (= 0 (serdes {:tag type :data 0})))
-  (is (= 123 (serdes {:tag type :data 123})))
-  (is (= -123 (serdes {:tag type :data -123})))
-  (is (= 12345 (serdes {:tag type :data 12345})))
-  (is (= -12345 (serdes {:tag type :data -12345})))
-  (is (= int32-max-value (serdes {:tag type :data int32-max-value})))
-  (is (= int32-min-value (serdes {:tag type :data int32-min-value})))
-  (is (= (- int32-max-value 1) (serdes {:tag type :data (- int32-max-value 1)})))
-  (is (= (+ int32-min-value 1) (serdes {:tag type :data (+ int32-min-value 1)}))))
+(defn test-serdes-32 [typ]
+  (is (= 0 (serdes {:tag typ :data 0})))
+  (is (= 1 (serdes {:tag typ :data 1})))
+  (is (= -1 (serdes {:tag typ :data -1})))
+  (is (= 123 (serdes {:tag typ :data 123})))
+  (is (= -123 (serdes {:tag typ :data -123})))
+  (is (= 12345 (serdes {:tag typ :data 12345})))
+  (is (= -12345 (serdes {:tag typ :data -12345})))
+  (is (= int32-max-value (serdes {:tag typ :data int32-max-value})))
+  (is (= int32-min-value (serdes {:tag typ :data int32-min-value})))
+  (is (= (- int32-max-value 1) (serdes {:tag typ :data (- int32-max-value 1)})))
+  (is (= (+ int32-min-value 1) (serdes {:tag typ :data (+ int32-min-value 1)}))))
 
-(defn test-serdes-u64 [type]
-  (test-serdes-u32 type)
-  (is (= int53-max-value (serdes {:tag type :data int53-max-value})))
-  #?(:clj (is (= long-const/max-value (serdes {:tag type :data long-const/max-value}))))
-  #?(:clj (is (= (- long-const/max-value 1) (serdes {:tag type :data (- long-const/max-value 1)})))))
+(defn test-serdes-u64 [typ]
+  (test-serdes-u32 typ)
+  (is (= int53-max-value (serdes {:tag typ :data int53-max-value})))
+  #?(:clj (is (= long-const/max-value (serdes {:tag typ :data long-const/max-value}))))
+  #?(:clj (is (= (- long-const/max-value 1) (serdes {:tag typ :data (- long-const/max-value 1)})))))
 
-(defn test-serdes-64 [type]
-  (test-serdes-32 type)
-  (is (= int53-max-value (serdes {:tag type :data int53-max-value})))
-  (is (= int53-min-value (serdes {:tag type :data int53-min-value})))
-  #?(:clj (is (= long-const/max-value (serdes {:tag type :data long-const/max-value}))))
-  #?(:clj (is (= long-const/min-value (serdes {:tag type :data long-const/min-value}))))
-  #?(:clj (is (= (- long-const/max-value 1) (serdes {:tag type :data (- long-const/max-value 1)}))))
-  #?(:clj (is (= (+ long-const/min-value 1) (serdes {:tag type :data (+ long-const/min-value 1)})))))
+(defn test-serdes-64 [typ]
+  (test-serdes-32 typ)
+  (is (= int53-max-value (serdes {:tag typ :data int53-max-value})))
+  (is (= int53-min-value (serdes {:tag typ :data int53-min-value})))
+  #?(:clj (is (= long-const/max-value (serdes {:tag typ :data long-const/max-value}))))
+  #?(:clj (is (= long-const/min-value (serdes {:tag typ :data long-const/min-value}))))
+  #?(:clj (is (= (- long-const/max-value 1) (serdes {:tag typ :data (- long-const/max-value 1)}))))
+  #?(:clj (is (= (+ long-const/min-value 1) (serdes {:tag typ :data (+ long-const/min-value 1)})))))
 
 (deftest test-serdes-int32 (test-serdes-32 :int32))
 (deftest test-serdes-int64 (test-serdes-64 :int64))
