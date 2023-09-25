@@ -21,6 +21,14 @@
                (decode1 dec/read-pri field-type))
            [field-num wire-type field-value]))))
 
+(defn =protobin-str
+  [field-num wire-type field-type field-value filename]
+  (is (= (-> (str "resources/protobuf/generated-bin/singular/"
+                  filename)
+             io/file .toPath java.nio.file.Files/readAllBytes
+             (decode1 dec/read-pri field-type))
+         [field-num wire-type field-value])))
+
 (deftest decode-singular-binary
   ; wire-type 0
   (=protobin 1 0 :int32 2147483647)
@@ -46,8 +54,8 @@
   (=protobin 11 1 :double -123.456)
 
   ; wire-type 2
-  (=protobin 12 2 :string "the quick brown fox")
-  (=protobin 12 2 :string "一二三四五")
+  (=protobin-str 12 2 :string "the quick brown fox", "string_the_quick_brown_fox.protobin")
+  (=protobin-str 12 2 :string "一二三四五",            "string_one_two_three_four_five.protobin")
 
   ; wire-type 5
   (=protobin 14 5 :fixed32 4294967295)
