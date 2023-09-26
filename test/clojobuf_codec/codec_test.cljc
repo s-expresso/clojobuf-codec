@@ -1,4 +1,4 @@
-(ns clojobuf-codec.test_codec
+(ns clojobuf-codec.codec-test
   (:require [clojobuf-codec.io.writer :refer [make-writer write-byte ->bytes]]
             [clojobuf-codec.io.reader :refer [make-reader]]
             [clojobuf-codec.encode :as enc]
@@ -160,6 +160,3 @@
          [123 5 1]))
   #_(is (= (codec-wire1 123 :float 1.0)
            [123 1 2])))
-
-
-(run-tests)
