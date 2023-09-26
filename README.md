@@ -10,8 +10,8 @@ Add the following to deps.edn (or its equivalent for lein).
 ```edn
 {:deps
  s-expresso/clojobuf-codec {:git/url "https://github.com/s-expresso/clojobuf-codec.git"
-                            :git/sha "5e15843a54671aff57da1eb7bb23adaafff1fe54"
-                            :git/tag "v0.1.4"}}
+                            :git/sha "9503c903ebcb8d09b183b7c6349f765e98f1dcbc"
+                            :git/tag "v0.1.5"}}
 ```
 
 ## Codec for protobuf 
