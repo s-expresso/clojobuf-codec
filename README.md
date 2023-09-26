@@ -18,10 +18,10 @@ Add the following to deps.edn (or its equivalent for lein).
 Example usage:
 
 ```clojure
-(ns my-ns.main
+(ns clojobuf-codec.example.ex1
   (:require [clojobuf-codec.io.reader :refer [make-reader]]
             [clojobuf-codec.io.writer :refer [make-writer ->bytes]]
-            [clojobuf-codec.decode :refer [read-pri]]
+            [clojobuf-codec.decode :refer [read-pri read-tag]]
             [clojobuf-codec.encode :refer [write-pri]]))
 
 (def writer (make-writer))
@@ -34,9 +34,14 @@ Example usage:
 
 (def reader (make-reader out))
 
-(read-pri reader :uint32) ; returns [1 23]
-(read-pri reader :double) ; returns [2 123.456]
-(read-pri reader :string) ; returns [3 "the quick brown fox"]
+(read-tag reader)         ; => [1 0] field num 1, wire type 0
+(read-pri reader :uint32) ; => 23
+
+(read-tag reader)         ; => [2 1] field num 2, wire type 1
+(read-pri reader :double) ; => 123.456
+
+(read-tag reader)         ; => [3 2] field num 3, wire type 2
+(read-pri reader :string) ; => "the quick brown fox"
 ```
 
 Protobuf messages uses [google's protobuf binary format](https://protobuf.dev/programming-guides/encoding/) that encodes each field as [Tag-Length-Value](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value).
@@ -96,7 +101,7 @@ For decoding, use functions in `clojobuf-codec.decode`:
 ```clojure
 (ns clojobuf-codec.decode
   "Decoding a protobuf encoded message is a 2 steps process performed repeatedly:
-    (1) call `(read-tag rr)` to get `field-id` and `wire-type`
+    (1) call `(read-tag reader)` to get `field-id` and `wire-type`
     (2) look up `field-id` in your protobuf schema to determine `field-type`
         (A) `field-type` == primitive
             (a) not :bytes/:string && wire-type 2 => `(read-packed reader field-type)`
