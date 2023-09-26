@@ -199,8 +199,9 @@
 #?(:cljs (defn write-bytes [out ^js/Array data]
            (let [reader (make-reader data)]
              (loop []
-               (write-byte out (read-byte reader))
-               (when (available? reader) (recur))))))
+               (when (available? reader)
+                 (write-byte out (read-byte reader))
+                 (recur))))))
 
 ;-----------------------------------------------------------------------
 ; Common
