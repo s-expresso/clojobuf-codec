@@ -1,4 +1,4 @@
-(ns clojobuf-codec.test_serdes
+(ns clojobuf-codec.serdes-test
   (:require [cljc-long.constants :as long-const]
             [clojobuf-codec.io.writer :refer [make-writer ->bytes]]
             [clojobuf-codec.io.reader :refer [make-reader]]
@@ -195,5 +195,3 @@
 (deftest test-serdes-text
   (is (= "abcdefg 1234567890" (serdes {:tag :text :data "abcdefg 1234567890"})))
   (is (= "知之为知之，不知为不知，是知也。" (serdes {:tag :text :data "知之为知之，不知为不知，是知也。"}))))
-
-(run-tests)

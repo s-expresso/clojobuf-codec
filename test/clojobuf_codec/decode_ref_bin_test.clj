@@ -1,4 +1,4 @@
-(ns clojobuf-codec.test_decode_ref_bin
+(ns clojobuf-codec.decode-ref-bin-test
   (:require [clojobuf-codec.decode :as dec]
             [clojobuf-codec.io.reader :refer [make-reader]]
             [clojure.core :refer [byte-array]]
@@ -89,5 +89,3 @@
   (=packed-protobin :fixed32 [14 2 [0, 12345, 23456, 34567, 4294967295]])
   (=packed-protobin :sfixed32 [15 2 [0, 12345, -12345, 2147483647, -2147483648]])
   (=packed-protobin :float [16 2 [0.0, 12.0, -12.0, 123.0, -123.0]]))
-
-(run-tests)
