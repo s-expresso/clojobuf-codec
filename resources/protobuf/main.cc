@@ -30,6 +30,14 @@
     packed.SerializeToOstream(&ofs); \
 }
 
+#define GEN_STR_BIN(TYPE, VALUE, FILE_SUFFIX) \
+ { \
+    Singular sin; \
+    sin.set_##TYPE##_val(VALUE); \
+    std::ofstream ofs("generated-bin/singular/" #TYPE "_" #FILE_SUFFIX ".protobin"); \
+    sin.SerializeToOstream(&ofs); \
+ }
+
 int main() {
     // wire-type 0
     GEN_BIN(int32, 2147483647);
@@ -64,8 +72,8 @@ int main() {
     GEN_BIN(double, -123.456);
 
     // wire-type 2
-    GEN_BIN(string, "the quick brown fox");
-    GEN_BIN(string, "一二三四五");
+    GEN_STR_BIN(string, "the quick brown fox", the_quick_brown_fox);
+    GEN_STR_BIN(string, "一二三四五", one_two_three_four_five);
 
     // wire-type 5
     GEN_BIN(fixed32, 4294967295);
