@@ -35,11 +35,8 @@
                                (.subarray buffer begin index)))
            (read-bytearray [this len]
              (let [writer (make-writer)]
-               (loop [i 0]
-                 (write-byte writer (read-byte this))
-                 (if (>= i (- len 1))
-                   (->bytes writer)
-                   (recur (inc i))))))))
+               (dotimes [_ len] (write-byte writer (read-byte this)))
+               (->bytes writer)))))
 
 #?(:clj (defn make-reader [bytes] (ByteArrayInputStream. bytes)))
 
