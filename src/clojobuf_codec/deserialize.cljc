@@ -5,7 +5,7 @@
              #?(:cljs [ByteReader read-byte])]
             [clojobuf-codec.util :refer
              #?(:clj  [>>> << raise])
-             #?(:cljs [>>> << >> make-HL32 HL32->n64 zigzag-decode-HL32])])
+             #?(:cljs [>>> << >> raise make-HL32 HL32->n64 zigzag-decode-HL32])])
   #?(:clj (:import [java.nio.charset StandardCharsets])))
 
 (declare read-bytes)
