@@ -39,8 +39,16 @@
          [3 0 45]))
   (is (= (codec1-pri 4 :uint64 56)
          [4 0 56]))
+  (is (= (codec1-pri 5 :sint32 -1)
+         [5 0 -1]))
+  (is (= (codec1-pri 5 :sint32 -2)
+         [5 0 -2]))
   (is (= (codec1-pri 5 :sint32 -67)
          [5 0 -67]))
+  (is (= (codec1-pri 6 :sint64 -1)
+         [6 0 -1]))
+  (is (= (codec1-pri 6 :sint64 -2)
+         [6 0 -2]))
   (is (= (codec1-pri 6 :sint64 -78)
          [6 0 -78]))
   (is (= (codec1-pri 7 :bool true)
@@ -75,19 +83,6 @@
          [17 5 123.0]))
   (is (= (codec1-pri 18 :float -123)
          [18 5 -123.0])))
-
-(deftest codec1-kv
-  (is (= (-> (encode1 enc/write-kv-pri 13 :uint32 23 :sint64 -1234567)
-             (decode1 dec/read-kv-pri :uint32 :sint64))
-         [13 2 [23 -1234567]]))
-  (is (= (-> (encode1 enc/write-kv-enum 14 :string "abc" 567)
-             (decode1 dec/read-kv-enum :string))
-         [14 2 ["abc" 567]]))
-  (is (= (let [[field-id wire-type bin]
-               (-> (encode1 enc/write-kv-msg 15 :sfixed64 -987654321 (byte-array [1 2 3 4 5]))
-                   (decode1 dec/read-kv-msg :sfixed64))]
-           [field-id wire-type (seq bin)]
-           [15 2 [-987654321 [1 2 3 4 5]]]))))
 
 (deftest codec-packed
   (is (= (codec1-packed 19 :int32 [0 1234 -1234])

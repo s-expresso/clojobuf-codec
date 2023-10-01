@@ -40,7 +40,7 @@
           (let [zigzag-varint (read-varint ^ByteReader in)
                 magnitude (>>> zigzag-varint 1)]
             (if (not= 0 (bit-and zigzag-varint 2r1)) ; negative
-              (if (= magnitude 0) long-const/min-value (- (- magnitude) 1))
+              (if (= magnitude 0) -1 (- (- magnitude) 1))
               magnitude))))
 
 #?(:clj (defn- read-zigzag-varint32 [in]
