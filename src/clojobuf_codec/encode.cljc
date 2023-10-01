@@ -27,7 +27,7 @@
   "Write a primitive field where
     writer     = clojobuf-codec.io.writer.ByteWriter (defprotocol)
     field-num  = field number
-    field-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool |
+    field-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool | :enum
                  :fixed32 | :sfixed32 | :float |
                  :fixed64 | :sfixed64 | :double |
                  :string | :bytes
@@ -68,51 +68,11 @@
                     #?(:cljs (.-length binary)))
     (ser/write-bytes binary)))
 
-(defn write-kv-pri
-  "Write key-value where value is a primitive type
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    key-type  = key type
-    k         = key value
-    val-type  = value type
-    v         = value"
-  [writer field-num key-type k val-type v]
-  (let [msg-writer (make-writer)]
-    (write-pri msg-writer 1 key-type k)
-    (write-pri msg-writer 2 val-type v)
-    (write-bytes writer field-num (->bytes msg-writer))))
-
-(defn write-kv-enum
-  "Write key-value where value is enum
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    key-type  = key type
-    k         = key value
-    int-val   = integer value (of enum field)"
-  [writer field-num key-type k int-val]
-  (let [msg-writer (make-writer)]
-    (write-pri msg-writer 1 key-type k)
-    (write-pri msg-writer 2 :enum int-val)
-    (write-bytes writer field-num (->bytes msg-writer))))
-
-(defn write-kv-msg
-  "Write key-value where value is binary representation of protobuf message
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    key-type  = key type
-    k         = key value
-    binary    = binary representation of protobuf message"
-  [writer field-num key-type k binary]
-  (let [msg-writer (make-writer)]
-    (write-pri msg-writer 1 key-type k)
-    (write-bytes msg-writer 2 binary)
-    (write-bytes writer field-num (->bytes msg-writer))))
-
 (defn write-packed
   "Write a sequence as packed
     writer     = clojobuf-codec.io.writer.ByteWriter (defprotocol)
     field-num  = field number
-    field-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool |
+    field-type = :int32 | :int64 | :uint32 :uint64 | :sint32 | :sint64 | :bool | :enum |
                  :fixed32 | :sfixed32 | float |
                  :fixed64 | :sfixed64 | double |
                  :string
@@ -126,6 +86,7 @@
                     :sint32   ser/write-sint32
                     :sint64   ser/write-sint64
                     :bool     ser/write-bool
+                    :enum     ser/write-enum
                     :fixed64  ser/write-fixed64
                     :sfixed64 ser/write-sfixed64
                     :double   ser/write-double
@@ -134,5 +95,5 @@
                     :float    ser/write-float
                     (raise (str "field type cannot be packed:" field-type)))
         packer (make-writer)]
-    (doall (map #(encode-fn packer %) values))
+    (run! #(encode-fn packer %) values)
     (write-bytes writer field-num (->bytes packer))))
