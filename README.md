@@ -77,13 +77,6 @@ For encoding, use functions in `clojobuf-codec.encode`:
     value      = value corresponding to field-type above"
   [writer field-num field-type value] ...)
 
-(defn write-bytes
-  "Write binary
-    writer    = clojobuf-codec.io.writer.ByteWriter (defprotocol)
-    field-num = field number
-    binary    = binary data to be copied by writer"
-  [writer field-num binary] ...)
-
 (defn write-packed
   "Write a sequence as packed
     writer     = clojobuf-codec.io.writer.ByteWriter (defprotocol)
@@ -106,21 +99,24 @@ For decoding, use functions in `clojobuf-codec.decode`:
     (1) call `(read-tag rr)` to get `field-id` and `wire-type`
     (2) look up `field-id` in your protobuf schema to determine `field-type`
         (A) `field-type` == primitive
-            (a) not :bytes && wire-type 2 => `(read-packed rr field-type)`
-            (b) all other cases           => `(read-pri    rr field-type)`
-        (B) `field-type` == message       => `(read-len-coded-bytes rr)`
-        (C) `field-type` == map           => decode it like message type
-  where `rr` is `clojobuf-codec.io.reader.ByteReader` reading the binary.
+            (a) not :bytes/:string && wire-type 2 => `(read-packed reader field-type)`
+            (b) all other cases                   => `(read-pri    reader field-type)`
+        (B) `field-type` == message               => `(read-len-coded-bytes reader)`
+        (C) `field-type` == map                   => decode it like message type
+  where `reader` is `clojobuf-codec.io.reader.ByteReader` reading the binary.
+
+  For (B), a binary representation of protobuf message is returned. Build a new reader
+  by calling `make-reader` on the returned binary, then decode reader as a new message.
 
   For (C), you decode it like a message because a protobuf map is encoded as a 
   message using field-id 1 to represent key and field-id 2 to represent value.
 
-  If look up of `field-id` fails, then sender is using a schema with additional
+  If (2)'s look up of `field-id` fails, then sender is using a schema with additional
   fields. Use `read-raw-wire` to extract the value generically and continue.
      
-  If look up of `field-id` yields a `field-type` incompatible with the `wire-type`,
+  If (2)'s look up of `field-id` yields a `field-type` incompatible with the `wire-type`,
   then sender is using a schema that has breaking change. If you want to continue
-  decoding, you must honour the wire-type and use `read-raw-wire` to preserve the
+  decoding, you must honour sender's wire-type and use `read-raw-wire` to preserve the
   correctness of Tag-(Len-)Value boundary."
   ...)
 
@@ -144,6 +140,10 @@ For decoding, use functions in `clojobuf-codec.decode`:
                    :fixed64 | :sfixed64 | double |
                    :string"
   [reader packed-type] ...)
+
+(defn read-len-coded-bytes
+  "Read the next value as varint N, and return the next N bytes as binary."
+  [reader] ...)
 
 (defn read-raw-wire
   "Read next value generically based on wire-type. This function is typically used iff
@@ -250,3 +250,8 @@ For decoding, use functions in `clojobuf-codec.deserialize`
 (defn read-bytes    [reader] ...)
 (defn read-text     [reader] ...)
 ```
+
+## Acknowledgements
+Great artists steal. CLJS version of this library is only possible because [protobuf.js](https://github.com/protobufjs/protobuf.js/) showed the way. If this library's CLJS code works for you then credit goes to [protobuf.js](https://github.com/protobufjs/protobuf.js/), if it doesn't then the fault is mine to have ported the code wrongly.
+
+PS: js bigint handling isn't ported over yet
