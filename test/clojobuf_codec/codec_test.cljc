@@ -69,10 +69,15 @@
 (deftest codec1-wire-type-2
   (is (= (codec1-pri 13 :string "The brown fox")
          [13 2 "The brown fox"]))
-  (is (= (let [[field-id wire-type bin]
-               (codec1-pri 14 :bytes (byte-array [1 2 3 4 5]))]
-           [field-id wire-type (seq bin)])
-         [14 2 (seq (byte-array [1 2 3 4 5]))])))
+  (let [[field-id wire-type bin]
+        (codec1-pri 14 :bytes (byte-array [1 2 3 4 5]))]
+    (is (= field-id 14))
+    (is (= wire-type 2))
+    (is (= (aget bin 0) 1))
+    (is (= (aget bin 1) 2))
+    (is (= (aget bin 2) 3))
+    (is (= (aget bin 3) 4))
+    (is (= (aget bin 4) 5))))
 
 (deftest codec1-wire-type-5
   (is (= (codec1-pri 15 :fixed32 91)

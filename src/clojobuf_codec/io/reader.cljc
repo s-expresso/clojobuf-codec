@@ -20,7 +20,7 @@
              #_(doto (byte-array len) #(.read this %))))
           (available? ([this] (> (.available this) 0)))))
 
-#?(:cljs (deftype ByteArrayReader [buffer
+#?(:cljs (deftype ByteArrayReader [^js/Uint8Array buffer
                                    ^:unsynchronized-mutable index]
            ByteReader
            (read-byte [_]
@@ -29,15 +29,11 @@
                value))
            (available? [_]
              (> (.-length buffer) index))
-           #_(read-bytearray [_ len]
-                             (let [begin index]
-                               (set! index (+ index len)) ; move index to end of read region
-                               (.subarray buffer begin index)))
-           (read-bytearray [this len]
-             (let [writer (make-writer)]
-               (dotimes [_ len] (write-byte writer (read-byte this)))
-               (->bytes writer)))))
+           (read-bytearray [_ len]
+             (let [out (.slice buffer index (+ index len))]
+               (set! index (+ index len))
+               out))))
 
 #?(:clj (defn make-reader [bytes] (ByteArrayInputStream. bytes)))
 
-#?(:cljs (defn make-reader [bytes] (->ByteArrayReader (js/Uint8Array. bytes) 0)))
+#?(:cljs (defn make-reader [^js/Uint8Array bytes] (->ByteArrayReader bytes 0)))

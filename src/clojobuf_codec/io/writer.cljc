@@ -20,8 +20,8 @@
            ByteWriter
            (write-byte
              [_ char] (.push buffer char))
-           (->bytes
-             [_] buffer)))
+           (->bytes [_] (js/Uint8Array. buffer)))) ; ok as long as every item in buffer is 0-255
 
 #?(:clj (defn make-writer [] (ByteArrayOutputStream.)))
+
 #?(:cljs (defn make-writer [] (->ByteArrayWriter (js/Array.))))
