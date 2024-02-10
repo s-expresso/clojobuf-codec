@@ -21,7 +21,7 @@
           (available? ([this] (> (.available this) 0)))))
 
 #?(:cljs (deftype ByteArrayReader [^js/Uint8Array buffer
-                                   ^:unsynchronized-mutable index]
+                                   ^:mutable index]
            ByteReader
            (read-byte [_]
              (let [value (aget buffer index)]
