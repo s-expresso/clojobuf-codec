@@ -8,10 +8,7 @@ It can also be used as a general purpose codec of protobuf binary format for any
 ## Usage
 Add the following to deps.edn (or its equivalent for lein).
 ```edn
-{:deps
- s-expresso/clojobuf-codec {:git/url "https://github.com/s-expresso/clojobuf-codec.git"
-                            :git/sha "9503c903ebcb8d09b183b7c6349f765e98f1dcbc"
-                            :git/tag "v0.1.5"}}
+{:deps {com.github.s-expresso/clojobuf-codec {:mvn/version "0.1.6"}}}
 ```
 
 ## Codec for protobuf 
